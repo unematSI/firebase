@@ -1,32 +1,61 @@
 <template>
-  <div id="app">
-    <nav>
-      <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link>
-    </nav>
-    <router-view/>
-  </div>
+  <v-app>
+    <v-app-bar app color="primary" dark>
+      <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
+      Sistema de Controle de Alunos
+      <v-spacer/>
+
+      <v-avatar color="black">
+        <v-icon dark> mdi-account-circle</v-icon>
+      </v-avatar>
+
+    </v-app-bar>
+
+    <v-main>
+      <router-view/>
+    </v-main>
+    <v-navigation-drawer v-model="drawer" absolute temporary>
+      <v-list nav dense>
+        <v-list-item-group v-model="group" active-class="deep-purple--text text--accent-4">
+
+          <v-list-item to="/">
+            <v-list-item-icon>
+              <v-icon>mdi-home</v-icon>
+            </v-list-item-icon>
+            <v-list-item-title>Home</v-list-item-title>
+          </v-list-item>
+
+          <v-list-item to="/client">
+            <v-list-item-icon>
+              <v-icon>mdi-account</v-icon>
+            </v-list-item-icon>
+            <v-list-item-title>Cliente</v-list-item-title>
+          </v-list-item>
+
+          <v-list-item to="/report">
+            <v-list-item-icon>
+              <v-icon>mdi-file</v-icon>
+            </v-list-item-icon>
+            <v-list-item-title>Relatório</v-list-item-title>
+          </v-list-item>
+
+        </v-list-item-group>
+      </v-list>
+    </v-navigation-drawer>
+  </v-app>
 </template>
 
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-}
+<script>
+export default {
+  data: () => ({
+    drawer: false,
+    group: null,
+  }),
 
-nav {
-  padding: 30px;
+  watch: {
+    group () {
+      this.drawer = false
+    },
+  },
 }
-
-nav a {
-  font-weight: bold;
-  color: #2c3e50;
-}
-
-nav a.router-link-exact-active {
-  color: #42b983;
-}
-</style>
+</script>
