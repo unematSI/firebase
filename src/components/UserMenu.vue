@@ -16,9 +16,6 @@
       <v-card v-if="!user.loggedIn">
         <v-list>
           <v-list-item>
-            <v-list-item-title @click.prevent="user.register('andre.luis@unemat.br', '12342Asdf*')">Cadastrar</v-list-item-title>
-          </v-list-item>
-          <v-list-item>
             <v-list-item-title @click.prevent="user.login()">Login</v-list-item-title>
           </v-list-item>
         </v-list>

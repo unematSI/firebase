@@ -5,21 +5,6 @@ import firebase from "firebase";
 export var user = {
     loggedIn: false,
     data: null,
-
-    async register(email, password) {
-        await auth
-            .createUserWithEmailAndPassword(email, password)
-            .then((user) => {
-                console.log(user);
-                this.loggedIn = true
-                this.data = user
-                return {'Status': true, 'Msg': 'Registrado com sucesso!'}
-            })
-            .catch((error) => {
-                console.log(error);
-                return {'status': false, 'Msg': `Falha ao se registrar (${error})!`}
-            })
-    },
     async login() {
         await auth
             .signInWithPopup(new firebase.auth.GoogleAuthProvider())
