@@ -22,7 +22,18 @@
             Novo
           </v-btn>
         </v-toolbar>
-        <v-autocomplete v-model="search" :items="clientNames" filled dense clearable label="Pesquisar"/>
+        <v-autocomplete v-model="search" :items="items" filled dense clearable label="Pesquisar"
+                        no-data-text="Sem itens" prepend-inner-icon="mdi-magnify" item-value="id" item-text="name">
+          <template v-slot:item="data">
+            <v-list-item-content>
+              <v-list-item-title v-text="data.item.name"></v-list-item-title>
+              <v-list-item-subtitle v-text="data.item.email"></v-list-item-subtitle>
+            </v-list-item-content>
+            <v-list-item-action>
+              <v-icon>mdi-account</v-icon>
+            </v-list-item-action>
+          </template>
+        </v-autocomplete>
         <client-modal ref="clientModal" @fechar="(client, mr, tf) => onModalclose(client, mr, tf)"/>
       </template>
       <template v-slot:item.actions="{ item }">
@@ -51,7 +62,6 @@ export default {
 
   data: () => ({
     search: '',
-    clientNames: [],
     selectedItem: {},
     selectedIndex: -1,
     headers: [
@@ -67,12 +77,7 @@ export default {
   },
   computed: {
     filteredClients() {
-      return this.search ? this.items.filter((i) => i.name.toLowerCase().includes(this.search.toLowerCase())) : this.items
-    },
-  },
-  watch: {
-    items() {
-     this.updateClientNames()
+      return this.search ? this.items.filter((i) => this.search === i.id) : this.items
     },
   },
   methods: {
@@ -81,7 +86,6 @@ export default {
           .post('client.json', item)
           .then(resp => {
             this.items.push(item)
-            this.updateClientNames();
             this.showSnackbar('Cliente cadastrado com sucesso!')
           })
           .catch(err => this.showSnackbar(`Erro ao inserir cliente: ${err}`, true))
@@ -92,7 +96,6 @@ export default {
           .then(resp => {
             this.items.splice(this.selectedIndex, 1)
             this.showSnackbar('Cliente deletado com sucesso!')
-            this.updateClientNames();
           })
           .catch(err => this.showSnackbar(`Erro ao deletar cliente: ${err}`, true))
 
@@ -104,7 +107,6 @@ export default {
             this.showSnackbar('Cliente alterado com sucesso!')
             this.items[this.selectedIndex].name = item.name
             this.items[this.selectedIndex].email = item.email
-            this.updateClientNames();
           })
           .catch(err => this.showSnackbar(`Erro ao alterar cliente: ${err}`, true))
     },
@@ -128,7 +130,6 @@ export default {
       this.selectedItem = Object.assign({}, item)
 
       this.$refs.clientModal.open(item, tf);
-
     },
     onModalclose(client = null, mr = ModalResult.MR_CANCEL, tf = TipoFormulario.TF_VISUALIZACAO) {
       if (mr === ModalResult.MR_OK) {
@@ -140,15 +141,10 @@ export default {
           this.deleteItem(client);
         }
       }
-      // this.getClients()
     },
     showSnackbar(msg, error = false) {
       this.$refs.snackbar.show(msg, error)
     },
-    updateClientNames(){
-      this.clientNames = this.items.map(i => i.name)
-      console.log(this.clientNames)
-    }
   },
 }
 </script>
