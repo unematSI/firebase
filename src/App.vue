@@ -5,10 +5,7 @@
       Sistema de Controle de Alunos
       <v-spacer/>
 
-      <v-avatar color="black">
-        <v-icon dark> mdi-account-circle</v-icon>
-      </v-avatar>
-
+      <user-menu/>
     </v-app-bar>
 
     <v-main>
@@ -46,7 +43,9 @@
 </template>
 
 <script>
+import UserMenu from "@/components/UserMenu";
 export default {
+  components: {UserMenu},
   data: () => ({
     drawer: false,
     group: null,

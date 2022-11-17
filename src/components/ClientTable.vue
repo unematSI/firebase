@@ -7,13 +7,13 @@
         :items="filteredClients"
         sort-by="name"
         class="elevation-1"
-        @click:row="item => openModal(item, tipoformulario.TF_VISUALIZACAO)"
     >
       <template v-slot:top>
         <v-toolbar flat>
           <v-toolbar-title>Clientes</v-toolbar-title>
           <v-spacer/>
           <v-btn
+              :disabled="!user.loggedIn"
               color="primary"
               dark
               class="mb-2"
@@ -37,14 +37,30 @@
         <client-modal ref="clientModal" @fechar="(client, mr, tf) => onModalclose(client, mr, tf)"/>
       </template>
       <template v-slot:item.actions="{ item }">
+
         <v-icon
+            color="blue"
+            small
+            class="mr-2"
+            @click.stop="openModal(item, tipoformulario.TF_VISUALIZACAO)"
+        >
+          mdi-eye
+        </v-icon>
+        <v-icon
+            :disabled="!user.loggedIn"
+            :color="user.loggedIn ? 'green' : 'grey'"
             small
             class="mr-2"
             @click.stop="openModal(item, tipoformulario.TF_ALTERACAO)"
         >
           mdi-pencil
         </v-icon>
-        <v-icon small @click.stop="openModal(item, tipoformulario.TF_EXCLUSAO)">
+        <v-icon
+            :disabled="!user.loggedIn"
+            :color="user.loggedIn ? 'red' : 'grey'"
+            small
+            @click.stop="openModal(item, tipoformulario.TF_EXCLUSAO)"
+        >
           mdi-delete
         </v-icon>
       </template>
@@ -56,18 +72,22 @@
 import ClientModal from "@/components/ClientModal";
 import CustomSnackbar from "@/components/CustomSnackbar";
 import {ModalResult, TipoFormulario} from "/src/utils";
+import {user} from "@/user";
 
 export default {
   components: {CustomSnackbar, ClientModal},
 
   data: () => ({
+    user: user,
     search: '',
     selectedItem: {},
     selectedIndex: -1,
     headers: [
       {text: 'Nome', align: 'start', value: 'name'},
       {text: 'Email', value: 'email'},
-      {text: 'Ações', value: 'actions', sortable: false},
+      {text: 'Inclusão', value: 'inclusao'},
+      {text: 'Edição', value: 'alteracao'},
+      {text: 'Ações', align: 'end', value: 'actions', sortable: false},
     ],
     tipoformulario: TipoFormulario,
     items: [],
@@ -83,6 +103,7 @@ export default {
   },
   methods: {
     addItem(item) {
+      item.inclusao = this.user.data.displayName
       this.$db.push(item, (err) => {
         if (err) {
           this.$refs.snackbar.show('Erro ao adicionar cliente', true)
@@ -98,6 +119,7 @@ export default {
 
     },
     editItem(item) {
+      item.alteracao = this.user.data.displayName
       this.$db.child(this.selectedItem.id).update(item, (err) => {
         if (err) {
           this.showSnackbar(`Erro ao editar cliente: ${err}`, true)
@@ -127,11 +149,12 @@ export default {
     setListeners() {
       this.$db.on('child_added', (snapshot) => {
         let client = snapshot.val()
-
         this.items.push({
           id: snapshot.key,
           name: client.name,
-          email: client.email
+          email: client.email,
+          alteracao: client.alteracao,
+          inclusao: client.inclusao
         })
         this.showSnackbar(`Cliente ${client.name} cadastrado!`)
       })
@@ -141,6 +164,8 @@ export default {
         let index = this.items.findIndex(item => item.id === snapshot.key)
         this.items[index].name = client.name;
         this.items[index].email = client.email;
+        this.items[index].alteracao = client.alteracao;
+        this.items[index].inclusao = client.inclusao;
 
         this.showSnackbar(`Cliente ${client.name} alterado!`)
       })
