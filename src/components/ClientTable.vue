@@ -73,7 +73,41 @@ export default {
     items: [],
   }),
   mounted() {
-    this.getClients()
+    // this.getClients()
+    this.$db.once('value', (snapshot) => {
+      let clients = snapshot.val()
+      this.items = Object.keys(clients).map(key => {
+        return {
+          id: key,
+          name: clients[key].name,
+          email: clients[key].email
+        }
+      })
+    })
+
+    this.$db.on('child_added', (snapshot) => {
+      let client = snapshot.val()
+      this.items.push({
+        id: snapshot.key,
+        name: client.name,
+        email: client.email
+      })
+    })
+
+    this.$db.on('child_changed', (snapshot) => {
+      let client = snapshot.val()
+      let index = this.items.findIndex(item => item.id === snapshot.key)
+      this.items[index] = {
+        id: snapshot.key,
+        name: client.name,
+        email: client.email
+      }
+    })
+
+    this.$db.on('child_removed', (snapshot) => {
+      let index = this.items.findIndex(item => item.id === snapshot.key)
+      this.items.splice(index, 1)
+    })
   },
   computed: {
     filteredClients() {
