@@ -73,41 +73,8 @@ export default {
     items: [],
   }),
   mounted() {
-    // this.getClients()
-    this.$db.once('value', (snapshot) => {
-      let clients = snapshot.val()
-      this.items = Object.keys(clients).map(key => {
-        return {
-          id: key,
-          name: clients[key].name,
-          email: clients[key].email
-        }
-      })
-    })
-
-    this.$db.on('child_added', (snapshot) => {
-      let client = snapshot.val()
-      this.items.push({
-        id: snapshot.key,
-        name: client.name,
-        email: client.email
-      })
-    })
-
-    this.$db.on('child_changed', (snapshot) => {
-      let client = snapshot.val()
-      let index = this.items.findIndex(item => item.id === snapshot.key)
-      this.items[index] = {
-        id: snapshot.key,
-        name: client.name,
-        email: client.email
-      }
-    })
-
-    this.$db.on('child_removed', (snapshot) => {
-      let index = this.items.findIndex(item => item.id === snapshot.key)
-      this.items.splice(index, 1)
-    })
+    this.setListeners()
+    this.showSnackbar('Clientes carregados com sucesso!')
   },
   computed: {
     filteredClients() {
@@ -116,48 +83,26 @@ export default {
   },
   methods: {
     addItem(item) {
-      this.$http
-          .post('client.json', item)
-          .then(resp => {
-            this.items.push(item)
-            this.showSnackbar('Cliente cadastrado com sucesso!')
-          })
-          .catch(err => this.showSnackbar(`Erro ao inserir cliente: ${err}`, true))
+      this.$db.push(item, (err) => {
+        if (err) {
+          this.$refs.snackbar.show('Erro ao adicionar cliente', true)
+        }
+      })
     },
     deleteItem() {
-      this.$http
-          .delete('client/' + this.selectedItem.id + '.json')
-          .then(resp => {
-            this.items.splice(this.selectedIndex, 1)
-            this.showSnackbar('Cliente deletado com sucesso!')
-          })
-          .catch(err => this.showSnackbar(`Erro ao deletar cliente: ${err}`, true))
+      this.$db.child(this.selectedItem.id).remove((err) => {
+        if (err) {
+          this.$refs.snackbar.show('Erro ao remover cliente', true)
+        }
+      })
 
     },
     editItem(item) {
-      this.$http
-          .patch('client/' + this.selectedItem.id + '.json', item)
-          .then(resp => {
-            this.showSnackbar('Cliente alterado com sucesso!')
-            this.items[this.selectedIndex].name = item.name
-            this.items[this.selectedIndex].email = item.email
-          })
-          .catch(err => this.showSnackbar(`Erro ao alterar cliente: ${err}`, true))
-    },
-    getClients() {
-      this.items = []
-      this.$http
-          .get('client.json')
-          .then(resp => {
-            for (let key in resp.data) {
-              this.items.push({
-                id: key,
-                name: resp.data[key].name,
-                email: resp.data[key].email,
-              })
-            }
-          })
-          .catch(err => this.showSnackbar(`Erro ao carregar clientes: ${err}`, true))
+      this.$db.child(this.selectedItem.id).update(item, (err) => {
+        if (err) {
+          this.showSnackbar(`Erro ao editar cliente: ${err}`, true)
+        }
+      })
     },
     openModal(item, tf) {
       this.selectedIndex = this.items.indexOf(item)
@@ -179,6 +124,33 @@ export default {
     showSnackbar(msg, error = false) {
       this.$refs.snackbar.show(msg, error)
     },
+    setListeners() {
+      this.$db.on('child_added', (snapshot) => {
+        let client = snapshot.val()
+
+        this.items.push({
+          id: snapshot.key,
+          name: client.name,
+          email: client.email
+        })
+        this.showSnackbar(`Cliente ${client.name} cadastrado!`)
+      })
+
+      this.$db.on('child_changed', (snapshot) => {
+        let client = snapshot.val()
+        let index = this.items.findIndex(item => item.id === snapshot.key)
+        this.items[index].name = client.name;
+        this.items[index].email = client.email;
+
+        this.showSnackbar(`Cliente ${client.name} alterado!`)
+      })
+
+      this.$db.on('child_removed', (snapshot) => {
+        let index = this.items.findIndex(item => item.id === snapshot.key)
+        this.showSnackbar(`Cliente ${this.items[index].name} deletado!`)
+        this.items.splice(index, 1)
+      })
+    }
   },
 }
 </script>
